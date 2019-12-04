@@ -26,32 +26,41 @@ class SUMOScope():
     '''sumo'''
 
     def __init__(self):
-        self.netgenBinary = checkBinary('netgenerate')
-        self.jtrrouterBinary = checkBinary('jtrrouter')
-        self.sumoBinary = checkBinary('sumo')
         # [{ "id": [],"path": [],"timestamps":[]},{}]
         self.trips_list = []
-        #
         self.current_dir = os.path.dirname(__file__)+"/"
 
-        # # create flows
-        # call([self.netgenBinary, '-c', 'data/grid.netgcfg'])
-        # randomTrips.main(randomTrips.get_options([
-        #     '--flows', '100',
-        #     '-b', '0',
-        #     '-e', '1',
-        #     '-n', 'data/net.net.xml',
-        #     '-o', 'data/flows.xml',
-        #     '--jtrrouter',
-        #     '--trip-attributes', 'departPos="random" departSpeed="max"']))
+    def create_network(self):
+        '''
+        <location netOffset="-565120.67,-5930830.85" convBoundary="0.00,0.00,4010.49,3225.15"
+        origBoundary="9.913090,53.450981,10.085598,53.551251"
+        projParameter="+proj=utm +zone=32 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"/>
+        '''
+        self.netgenBinary = checkBinary('netgenerate')
+        call([self.netgenBinary, '-c', 'data/grid.netgcfg'])
 
-        # # create routes
-        # call([self.jtrrouterBinary, '-c', 'data/grid.jtrrcfg'])
+    def create_flows(self):
+        ''' create flows'''
+        self.jtrrouterBinary = checkBinary('jtrrouter')
+        call([self.jtrrouterBinary, '-c', 'data/grid.jtrrcfg'])
+
+    def create_trips(self):
+        # create random trips
+        randomTrips.main(randomTrips.get_options([
+            '--flows', '200',
+            '-b', '0',
+            '-e', '1',
+            '-n', 'data/net.net.xml',
+            '-o', 'data/flows.xml',
+            '--jtrrouter',
+            '--trip-attributes', 'departPos="random" departSpeed="max"']))
 
     def existing_car_bool(self, veh_id):
         return any(i['id'] == [str(veh_id)] for i in self.trips_list)
 
     def traciRun(self):
+        self.sumoBinary = checkBinary('sumo')
+
         '''run'''
         # ! https://sumo.dlr.de/docs/Simulation/Output.html
 
@@ -60,7 +69,7 @@ class SUMOScope():
 
         # while traci.simulation.getMinExpectedNumber() > 0:
         step = 0
-        while step < 500:
+        while step < 5000:
             traci.simulationStep()
 
             for veh_id in traci.vehicle.getIDList():
