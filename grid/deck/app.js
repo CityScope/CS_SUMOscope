@@ -4,19 +4,32 @@ import { render } from "react-dom";
 import { StaticMap } from "react-map-gl";
 import DeckGL from "@deck.gl/react";
 import { TripsLayer } from "@deck.gl/geo-layers";
-let sumo = require("../results.json");
+let sumoData = require("../results.json");
 
+const vehicles_count = 100;
 // Set your mapbox token here
 const MAPBOX_TOKEN =
     "pk.eyJ1IjoicmVsbm94IiwiYSI6ImNqd2VwOTNtYjExaHkzeXBzYm1xc3E3dzQifQ.X8r8nj4-baZXSsFgctQMsg"; // eslint-disable-line
 
 const INITIAL_VIEW_STATE = {
-    longitude: sumo[0].path[0][0],
-    latitude: sumo[0].path[0][1],
+    longitude: sumoData[0].path[0][0],
+    latitude: sumoData[0].path[0][1],
     zoom: 14,
     pitch: 45,
     bearing: 0
 };
+
+function randomColors(number) {
+    let colArr = [];
+    for (let i = 0; i < number; i++) {
+        let r = Math.floor(Math.random() * 255);
+        let g = Math.floor(Math.random() * 255);
+        let b = Math.floor(Math.random() * 255);
+        colArr[i] = [r, g, b];
+    }
+    return colArr;
+}
+let randomColorsArray = randomColors(vehicles_count);
 
 export default class App extends Component {
     constructor(props) {
@@ -56,11 +69,7 @@ export default class App extends Component {
     }
 
     _renderLayers() {
-        const {
-            trips = sumo,
-            trailLength = 180,
-            vehicles_count = 100
-        } = this.props;
+        const { trips = sumoData, trailLength = 50 } = this.props;
 
         return [
             new TripsLayer({
@@ -85,8 +94,7 @@ export default class App extends Component {
                 getTimestamps: d => d.timestamps,
                 getColor: d => {
                     let idInt = parseInt(d.id, 10);
-                    let col = (idInt / vehicles_count) * 255;
-                    return [col, 0, 255];
+                    return randomColorsArray[idInt];
                 },
                 opacity: 0.7,
                 widthMinPixels: 1,
