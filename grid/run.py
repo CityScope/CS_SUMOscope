@@ -28,48 +28,62 @@ class SUMOScope():
     def __init__(self):
         # [{ "id": [],"path": [],"timestamps":[]},{}]
         self.trips_list = []
+        self.sim_length = 500
+        self.vehicles_count = 100
         self.current_dir = os.path.dirname(__file__)+"/"
 
-    def create_network(self):
-        '''
-        <location netOffset="-565120.67,-5930830.85" convBoundary="0.00,0.00,4010.49,3225.15"
-        origBoundary="9.913090,53.450981,10.085598,53.551251"
-        projParameter="+proj=utm +zone=32 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"/>
-        '''
+    def create_random_network(self):
         self.netgenBinary = checkBinary('netgenerate')
-        call([self.netgenBinary, '-c', 'data/grid.netgcfg'])
+        call([self.netgenBinary, '-c', 'data/create_network.netgcfg'])
 
-    def create_flows(self):
-        ''' create flows'''
-        self.jtrrouterBinary = checkBinary('jtrrouter')
-        call([self.jtrrouterBinary, '-c', 'data/grid.jtrrcfg'])
+    def osm_to_sumo_net(self):
+        self.netconvertBinary = checkBinary('netconvert')
+        call([self.netconvertBinary, '--osm-files',
+              'data/map.osm',
+              '-o',
+              'data/net.net.xml',
+              '--geometry.remove',
+              '--ramps.guess',
+              '--junctions.join',
+              '--tls.guess-signals',
+              '--tls.discard-simple',
+              '--tls.join'])
 
-    def create_trips(self):
-        # create random trips
+    def create_random_flows(self):
+        ''' create random'''
         randomTrips.main(randomTrips.get_options([
-            '--flows', '200',
+            '--flows', str(self.vehicles_count),
             '-b', '0',
             '-e', '1',
             '-n', 'data/net.net.xml',
-            '-o', 'data/flows.xml',
+            '-o', 'data/trips.xml',
             '--jtrrouter',
             '--trip-attributes', 'departPos="random" departSpeed="max"']))
 
-    def existing_car_bool(self, veh_id):
-        return any(i['id'] == [str(veh_id)] for i in self.trips_list)
+    def simple_random_trips(self):
+        ''' create trips'''
+        randomTrips.main(randomTrips.get_options([
+            '-e', str(self.sim_length),
+            '-n', 'data/net.net.xml',
+            '-o', 'data/trips.xml']))
 
-    def traciRun(self):
+    def create_routes(self):
+        '''create routes'''
+        self.jtrrouterBinary = checkBinary('jtrrouter')
+        call([self.jtrrouterBinary, '-c',
+              'data/routes_config.jtrrcfg', '--repair', 'true'])
+
+    def export_sim_to_json(self):
+        '''run'''
         self.sumoBinary = checkBinary('sumo')
 
-        '''run'''
-        # ! https://sumo.dlr.de/docs/Simulation/Output.html
-
         traci.start([self.sumoBinary, "-c", self.current_dir +
-                     'data/grid.sumocfg', "-v"])
+                     'data/sumo.sumocfg', "-v"])
 
         # while traci.simulation.getMinExpectedNumber() > 0:
         step = 0
-        while step < 5000:
+        while step < self.sim_length:
+            print('sim step', step)
             traci.simulationStep()
 
             for veh_id in traci.vehicle.getIDList():
@@ -97,7 +111,25 @@ class SUMOScope():
         with open(self.current_dir+"results.json", 'w') as outfile:
             json.dump(self.trips_list, outfile)
 
+    def existing_car_bool(self, veh_id):
+        '''returns if a car is in list already'''
+        return any(i['id'] == [str(veh_id)] for i in self.trips_list)
+
 
 if __name__ == "__main__":
+
     sumo = SUMOScope()
-    sumo.traciRun()
+
+    # make network
+    # ? sumo.create_random_network()
+    # ? sumo.osm_to_sumo_net()
+
+    # make random trips
+    sumo.create_random_flows()
+    # ? sumo.create_random_trips()
+
+    # make routes
+    sumo.create_routes()
+
+    # run and save to json
+    sumo.export_sim_to_json()

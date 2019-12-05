@@ -41,7 +41,7 @@ export default class App extends Component {
 
     _animate() {
         const {
-            loopLength = 1000, // unit corresponds to the timestamp in source data
+            loopLength = 500, // unit corresponds to the timestamp in source data
             animationSpeed = 50 // unit time per second
         } = this.props;
         const timestamp = Date.now() / 1000;
@@ -56,7 +56,11 @@ export default class App extends Component {
     }
 
     _renderLayers() {
-        const { trips = sumo, trailLength = 100 } = this.props;
+        const {
+            trips = sumo,
+            trailLength = 180,
+            vehicles_count = 100
+        } = this.props;
 
         return [
             new TripsLayer({
@@ -81,7 +85,7 @@ export default class App extends Component {
                 getTimestamps: d => d.timestamps,
                 getColor: d => {
                     let idInt = parseInt(d.id, 10);
-                    let col = (idInt / 100) * 255;
+                    let col = (idInt / vehicles_count) * 255;
                     return [col, 0, 255];
                 },
                 opacity: 0.7,
