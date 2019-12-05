@@ -6,14 +6,16 @@ import DeckGL from "@deck.gl/react";
 import { TripsLayer } from "@deck.gl/geo-layers";
 let sumoData = require("../results.json");
 
-const vehicles_count = 100;
+console.log(sumoData.meta);
+
+const vehicles_count = sumoData.meta.vehicles_count;
 // Set your mapbox token here
 const MAPBOX_TOKEN =
     "pk.eyJ1IjoicmVsbm94IiwiYSI6ImNqd2VwOTNtYjExaHkzeXBzYm1xc3E3dzQifQ.X8r8nj4-baZXSsFgctQMsg"; // eslint-disable-line
 
 const INITIAL_VIEW_STATE = {
-    longitude: sumoData[0].path[0][0],
-    latitude: sumoData[0].path[0][1],
+    longitude: sumoData.trips[0].path[0][0],
+    latitude: sumoData.trips[0].path[0][1],
     zoom: 14,
     pitch: 45,
     bearing: 0
@@ -54,7 +56,7 @@ export default class App extends Component {
 
     _animate() {
         const {
-            loopLength = 500, // unit corresponds to the timestamp in source data
+            loopLength = sumoData.meta.sim_length,
             animationSpeed = 50 // unit time per second
         } = this.props;
         const timestamp = Date.now() / 1000;
@@ -69,7 +71,7 @@ export default class App extends Component {
     }
 
     _renderLayers() {
-        const { trips = sumoData, trailLength = 50 } = this.props;
+        const { trips = sumoData.trips, trailLength = 50 } = this.props;
 
         return [
             new TripsLayer({
@@ -109,24 +111,31 @@ export default class App extends Component {
 
     render() {
         const {
+            time = this.state.time,
             viewState,
             mapStyle = "mapbox://styles/relnox/cjl58dpkq2jjp2rmzyrdvfsds"
         } = this.props;
 
         return (
-            <DeckGL
-                layers={this._renderLayers()}
-                initialViewState={INITIAL_VIEW_STATE}
-                viewState={viewState}
-                controller={true}
-            >
-                <StaticMap
-                    reuseMaps
-                    mapStyle={mapStyle}
-                    preventStyleDiffing={true}
-                    mapboxApiAccessToken={MAPBOX_TOKEN}
-                />
-            </DeckGL>
+            <div>
+                <h1 style={{ position: "fixed", zIndex: 1000, color: "white" }}>
+                    {Math.floor(time)}
+                </h1>
+                ;
+                <DeckGL
+                    layers={this._renderLayers()}
+                    initialViewState={INITIAL_VIEW_STATE}
+                    viewState={viewState}
+                    controller={true}
+                >
+                    <StaticMap
+                        reuseMaps
+                        mapStyle={mapStyle}
+                        preventStyleDiffing={true}
+                        mapboxApiAccessToken={MAPBOX_TOKEN}
+                    />
+                </DeckGL>
+            </div>
         );
     }
 }

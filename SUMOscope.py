@@ -27,8 +27,12 @@ class SUMOScope():
 
     def __init__(self):
         # [{ "id": [],"path": [],"timestamps":[]},{}]
+        self.sim_meta = []
         self.trips_list = []
-        self.sim_length = 500
+        # max sim time
+        self.max_sim_length = 1000
+        # how much time did the sim took
+        self.actual_sim_length = 0
         self.vehicles_count = 100
         self.current_dir = os.path.dirname(__file__)+"/"
 
@@ -50,7 +54,7 @@ class SUMOScope():
               '--tls.join'])
 
     def create_random_flows(self):
-        ''' create random'''
+        ''' create random flows'''
         randomTrips.main(randomTrips.get_options([
             '--flows', str(self.vehicles_count),
             '-b', '0',
@@ -59,13 +63,6 @@ class SUMOScope():
             '-o', 'data/trips.xml',
             '--jtrrouter',
             '--trip-attributes', 'departPos="random" departSpeed="max"']))
-
-    def simple_random_trips(self):
-        ''' create trips'''
-        randomTrips.main(randomTrips.get_options([
-            '-e', str(self.sim_length),
-            '-n', 'data/net.net.xml',
-            '-o', 'data/trips.xml']))
 
     def create_routes(self):
         '''create routes'''
@@ -79,10 +76,8 @@ class SUMOScope():
 
         traci.start([self.sumoBinary, "-c", self.current_dir +
                      'data/sumo.sumocfg', "-v"])
-
-        # while traci.simulation.getMinExpectedNumber() > 0:
         step = 0
-        while step < self.sim_length:
+        while step < self.max_sim_length and traci.simulation.getMinExpectedNumber() > 0:
             print('sim step', step)
             traci.simulationStep()
 
@@ -90,6 +85,13 @@ class SUMOScope():
                 x, y = traci.vehicle.getPosition(veh_id)
                 lon, lat = traci.simulation.convertGeo(x, y)
                 car_loc = [lon, lat]
+
+                try:
+                    if step > 250:
+                        traci.vehicle.changeTarget(veh_id, '-443027018#5')
+                except traci.TraCIException:
+                    print("An exception occurred")
+
                 # check if behicle is in list alreay
                 # if so, add locations and timestamps
                 if self.existing_car_bool(veh_id):
@@ -105,11 +107,16 @@ class SUMOScope():
                     )
 
             step += 1
+            self.actual_sim_length = step
         traci.close()
         sys.stdout.flush()
 #
+        self.sim_meta = {'sim_length': self.actual_sim_length,
+                         'vehicles_count': self.vehicles_count}
+        print(self.actual_sim_length)
+        results = {'meta': self.sim_meta, 'trips': self.trips_list}
         with open(self.current_dir+"results.json", 'w') as outfile:
-            json.dump(self.trips_list, outfile)
+            json.dump(results, outfile)
 
     def existing_car_bool(self, veh_id):
         '''returns if a car is in list already'''
@@ -126,7 +133,6 @@ if __name__ == "__main__":
 
     # make random trips
     sumo.create_random_flows()
-    # ? sumo.create_random_trips()
 
     # make routes
     sumo.create_routes()
