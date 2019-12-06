@@ -26,16 +26,14 @@ class SUMOScope():
     '''sumo'''
 
     def __init__(self):
-        # [{ "id": [],"path": [],"timestamps":[]},{}]
-        self.sim_meta = []
-        self.osm_path = 'data/grasbrook.map.osm'
+        self.osm_path = 'data/paris.map.osm'
         self.trips_list = []
         self.scatterplot_list = []
         # max sim time
         self.max_sim_length = 1000
         # how much time did the sim took
         self.actual_sim_length = 0
-        self.vehicles_count = 100
+        self.vehicles_count = 500
         self.current_dir = os.path.dirname(__file__)+"/"
 
     def create_random_network(self):
@@ -73,12 +71,33 @@ class SUMOScope():
         call([self.jtrrouterBinary, '-c',
               'data/routes_config.jtrrcfg'])
 
-    def export_sim_to_json(self):
-        '''run'''
-        self.sumoBinary = checkBinary('sumo')
+    def existing_car_bool(self, veh_id):
+        '''returns if a car is in list already'''
+        return any(i['id'] == [str(veh_id)] for i in self.trips_list)
 
+    def export_sim_to_json(self):
+        '''compute sim results from traci'''
+        self.sumoBinary = checkBinary('sumo')
         traci.start([self.sumoBinary, "-c", self.current_dir +
                      'data/sumo.sumocfg', "-v"])
+        #
+        self.run_simulation_loop()
+
+        json_results = {'meta':
+                        {'sim_length': self.actual_sim_length,
+                         'vehicles_count': self.vehicles_count},
+                        'trips': self.trips_list,
+                        'scatterplot': self.scatterplot_list}
+        #
+        with open(self.current_dir+"results.json", 'w') as outfile:
+            json.dump(json_results, outfile)
+
+        traci.close()
+        sys.stdout.flush()
+
+    def run_simulation_loop(self):
+        '''compute'''
+
         step = 0
         while step < self.max_sim_length and traci.simulation.getMinExpectedNumber() > 0:
             print('sim step:', step)
@@ -91,13 +110,12 @@ class SUMOScope():
                 speed = traci.vehicle.getSpeed(veh_id)
                 max_speed = traci.vehicle.getMaxSpeedLat(veh_id)
 
-                try:
-                    # some time parameter for now
-                    if self.actual_sim_length > self.max_sim_length/2:
-
-                        traci.vehicle.changeTarget(veh_id, '174302041#3')
-                except traci.TraCIException:
-                    print("An exception occurred")
+                # try:
+                #     # some time parameter for now
+                #     if self.actual_sim_length > self.max_sim_length/2:
+                #         traci.vehicle.changeTarget(veh_id, '27286674')
+                # except traci.TraCIException:
+                #     print("An exception occurred")
 
                 # check if behicle is in list alreay
                 # if so, add locations and timestamps
@@ -109,31 +127,13 @@ class SUMOScope():
                 # else create new vehicle
                 else:
                     self.trips_list.append(
-                        {"id": [veh_id], "path": [
-                            car_loc], "timestamps": [step]}
-                    )
+                        {"id": [veh_id], "path": [car_loc], "timestamps": [step]})
 
                 self.scatterplot_list.append({
                     'name': str(veh_id), 'coordinates': car_loc, 'speed': speed, 'maxSpeed': max_speed})
+
             step += 1
-
             self.actual_sim_length = step
-        traci.close()
-        sys.stdout.flush()
-#
-        self.sim_meta = {'sim_length': self.actual_sim_length,
-                         'vehicles_count': self.vehicles_count}
-        print(self.actual_sim_length)
-        #
-        results = {'meta': self.sim_meta, 'trips': self.trips_list,
-                   'scatterplot': self.scatterplot_list}
-        #
-        with open(self.current_dir+"results.json", 'w') as outfile:
-            json.dump(results, outfile)
-
-    def existing_car_bool(self, veh_id):
-        '''returns if a car is in list already'''
-        return any(i['id'] == [str(veh_id)] for i in self.trips_list)
 
 
 if __name__ == "__main__":
