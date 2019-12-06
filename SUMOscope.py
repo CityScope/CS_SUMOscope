@@ -28,7 +28,9 @@ class SUMOScope():
     def __init__(self):
         # [{ "id": [],"path": [],"timestamps":[]},{}]
         self.sim_meta = []
+        self.osm_path = 'data/grasbrook.map.osm'
         self.trips_list = []
+        self.scatterplot_list = []
         # max sim time
         self.max_sim_length = 1000
         # how much time did the sim took
@@ -43,11 +45,12 @@ class SUMOScope():
     def osm_to_sumo_net(self):
         self.netconvertBinary = checkBinary('netconvert')
         call([self.netconvertBinary, '--osm-files',
-              'data/map.osm',
+              self.osm_path,
               '-o',
               'data/net.net.xml',
               '--geometry.remove',
               '--ramps.guess',
+              '--keep-edges.by-vclass', 'private',
               '--junctions.join',
               '--tls.guess-signals',
               '--tls.discard-simple',
@@ -68,7 +71,7 @@ class SUMOScope():
         '''create routes'''
         self.jtrrouterBinary = checkBinary('jtrrouter')
         call([self.jtrrouterBinary, '-c',
-              'data/routes_config.jtrrcfg', '--repair', 'true'])
+              'data/routes_config.jtrrcfg'])
 
     def export_sim_to_json(self):
         '''run'''
@@ -78,17 +81,21 @@ class SUMOScope():
                      'data/sumo.sumocfg', "-v"])
         step = 0
         while step < self.max_sim_length and traci.simulation.getMinExpectedNumber() > 0:
-            print('sim step', step)
+            print('sim step:', step)
             traci.simulationStep()
 
             for veh_id in traci.vehicle.getIDList():
                 x, y = traci.vehicle.getPosition(veh_id)
                 lon, lat = traci.simulation.convertGeo(x, y)
                 car_loc = [lon, lat]
+                speed = traci.vehicle.getSpeed(veh_id)
+                max_speed = traci.vehicle.getMaxSpeedLat(veh_id)
 
                 try:
-                    if step > 250:
-                        traci.vehicle.changeTarget(veh_id, '-443027018#5')
+                    # some time parameter for now
+                    if self.actual_sim_length > self.max_sim_length/2:
+
+                        traci.vehicle.changeTarget(veh_id, '174302041#3')
                 except traci.TraCIException:
                     print("An exception occurred")
 
@@ -106,7 +113,10 @@ class SUMOScope():
                             car_loc], "timestamps": [step]}
                     )
 
+                self.scatterplot_list.append({
+                    'name': str(veh_id), 'coordinates': car_loc, 'speed': speed, 'maxSpeed': max_speed})
             step += 1
+
             self.actual_sim_length = step
         traci.close()
         sys.stdout.flush()
@@ -114,7 +124,10 @@ class SUMOScope():
         self.sim_meta = {'sim_length': self.actual_sim_length,
                          'vehicles_count': self.vehicles_count}
         print(self.actual_sim_length)
-        results = {'meta': self.sim_meta, 'trips': self.trips_list}
+        #
+        results = {'meta': self.sim_meta, 'trips': self.trips_list,
+                   'scatterplot': self.scatterplot_list}
+        #
         with open(self.current_dir+"results.json", 'w') as outfile:
             json.dump(results, outfile)
 
@@ -128,8 +141,8 @@ if __name__ == "__main__":
     sumo = SUMOScope()
 
     # make network
-    # ? sumo.create_random_network()
-    # ? sumo.osm_to_sumo_net()
+    #  sumo.create_random_network()
+    # sumo.osm_to_sumo_net()
 
     # make random trips
     sumo.create_random_flows()

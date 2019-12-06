@@ -14,10 +14,10 @@
         <output-file value="routes.xml"/>
     </output>
 
-    <!-- <processing> -->
-        <!-- <turn-defaults value="25,50,25"/> -->
-        <!-- <accept-all-destinations value="true"/> -->
-        <!-- <allow-loops value="true"/> -->
-    <!-- </processing> -->
+    <processing> -->
+        <turn-defaults value="25,50,25"/>
+        <accept-all-destinations value="true"/>
+        <allow-loops value="true"/>
+    </processing>
 
 </configuration>
