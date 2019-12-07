@@ -13,7 +13,7 @@ export default class App extends Component {
         this.state = {
             time: 0,
             opacity: 0.2,
-            simSpeed:100
+            simSpeed: 100
         };
 
         this.vehicles_count = sumoData.meta.vehicles_count;
@@ -93,15 +93,15 @@ export default class App extends Component {
                 id: "trips",
                 data: trips,
                 getPath: d => {
-                    const noisePath =
-                        Math.random() < 0.5
-                            ? Math.random() * 0.00005
-                            : Math.random() * -0.00005;
+                    // const noisePath =
+                    //     Math.random() < 0.5
+                    //         ? Math.random() * 0.00005
+                    //         : Math.random() * -0.00005;
 
-                    for (let i in d.path) {
-                        d.path[i][0] = d.path[i][0] + noisePath;
-                        d.path[i][1] = d.path[i][1] + noisePath;
-                    }
+                    // for (let i in d.path) {
+                    //     d.path[i][0] = d.path[i][0] + noisePath;
+                    //     d.path[i][1] = d.path[i][1] + noisePath;
+                    // }
 
                     return d.path;
                 },
@@ -168,7 +168,7 @@ export default class App extends Component {
                         onChange={this._controlOpacity.bind(this)}
                         step="0.01"
                     />
-                     <input
+                    <input
                         id="inputSlider"
                         type="range"
                         min="0"

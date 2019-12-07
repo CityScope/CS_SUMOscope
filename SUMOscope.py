@@ -27,14 +27,14 @@ class SUMOScope():
     '''sumo'''
 
     def __init__(self):
-        self.osm_path = 'data/paris.map.osm'
+        self.osm_path = 'data/network/paris.map.osm'
         self.trips_list = []
         self.scatterplot_list = []
         # max sim time
-        self.max_sim_length = 100
+        self.max_sim_length = 10000
         # how much time did the sim took
         self.actual_sim_length = 0
-        self.vehicles_count = 10
+        self.vehicles_count = 200
         self.current_dir = os.path.dirname(__file__)+"/"
         self.cityio_table = 'virtual_table'
         self.cityio_endpoint = 'https://cityio.media.mit.edu/api/table/update/' + \
@@ -54,14 +54,14 @@ class SUMOScope():
 
     def create_random_network(self):
         self.netgenBinary = checkBinary('netgenerate')
-        call([self.netgenBinary, '-c', 'data/create_network.netgcfg'])
+        call([self.netgenBinary, '-c', 'data/network/random_network.netgcfg'])
 
     def osm_to_sumo_net(self):
         self.netconvertBinary = checkBinary('netconvert')
         call([self.netconvertBinary, '--osm-files',
               self.osm_path,
               '-o',
-              'data/net.net.xml',
+              'data/network/net.net.xml',
               '--geometry.remove',
               '--ramps.guess',
               '--keep-edges.by-vclass', 'private',
@@ -70,14 +70,14 @@ class SUMOScope():
               '--tls.discard-simple',
               '--tls.join'])
 
-    def create_random_flows(self):
+    def create_random_demand(self):
         ''' create random flows'''
         randomTrips.main(randomTrips.get_options([
             '--flows', str(self.vehicles_count),
             '-b', '0',
             '-e', '1',
-            '-n', 'data/net.net.xml',
-            '-o', 'data/trips.xml',
+            '-n', 'data/network/net.net.xml',
+            '-o', 'data/demand/demand.xml',
             '--jtrrouter',
             '--trip-attributes', 'departPos="random" departSpeed="max"']))
 
@@ -85,7 +85,7 @@ class SUMOScope():
         '''create routes'''
         self.jtrrouterBinary = checkBinary('jtrrouter')
         call([self.jtrrouterBinary, '-c',
-              'data/routes_config.jtrrcfg'])
+              'data/routes/routes_config.jtrrcfg'])
 
     def existing_car_bool(self, veh_id):
         '''returns if a car is in list already'''
@@ -127,12 +127,14 @@ class SUMOScope():
                 speed = traci.vehicle.getSpeed(veh_id)
                 max_speed = traci.vehicle.getMaxSpeedLat(veh_id)
 
-                # try:
-                #     # some time parameter for now
-                #     if self.actual_sim_length > self.max_sim_length/2:
-                #         traci.vehicle.changeTarget(veh_id, '27286674')
-                # except traci.TraCIException:
-                #     print("An exception occurred")
+                try:
+                    # some time parameter for now
+                    if  speed/max_speed<0.5  and self.actual_sim_length>100:
+                        traci.vehicle.changeTarget(veh_id, '470987535#0')
+                    elif self.actual_sim_length > self.max_sim_length/2:
+                        traci.vehicle.changeTarget(veh_id, '-544549304#4')
+                except traci.TraCIException:
+                    pass
 
                 # check if behicle is in list alreay
                 # if so, add locations and timestamps
@@ -162,7 +164,7 @@ if __name__ == "__main__":
     # sumo.osm_to_sumo_net()
 
     # make random trips
-    sumo.create_random_flows()
+    sumo.create_random_demand()
 
     # make routes
     sumo.create_routes()
