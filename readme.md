@@ -1,73 +1,46 @@
-# SUMOScope: SUMO for CityScope
+# SUMOScope
 
-A CityScope module for streaming traffic simulations to cityIO during SUMO runtime.
-`osm` folder contains sample SUMO network for the Grasbrook area in Hamburg with pre-generated traffic.
+### SUMO mobility simulation for CityScope
 
-## Install SUMO for macOS
+SUMOScope is a CityScope module for a near real-time traffic simulation of custom demand modeled over OSM or arbitrary networks.
+
+SUMOScope uses [SUMO Traci](https://sumo.dlr.de/) interface to export simulation results as JSON and ship them on demand to cityIO. A visualization example of results is included in `deckgl` folder.
+
+## Setup
+
+### Install SUMO for macOS
 
 https://sumo.dlr.de/wiki/Installing/MacOS_Build
 
-## Install Xquartz for SUMO GUI
+### Install Xquartz
+
+to run SUMO GUI & Netedit:
 
 https://www.xquartz.org/
 
-## Enable TRACI in Python
+### Enable TRACI in Python
 
--   add this to `‎⁨~/..bash_profile` to expose SUMO libs to python
-    NOTE: check your SUMO version
+add this to `‎⁨~/..bash_profile` to expose SUMO libs to python
+NOTE: check your SUMO version
 
 ```
 # sets sumo home path
-export SUMO_HOME="/usr/local/Cellar/sumo/__1.2.0__[version]/share/sumo"
+export SUMO_HOME="/usr/local/Cellar/sumo/__[sumo installed version]__/share/sumo"
 export PATH="$SUMO_HOME/bin:$PATH"
 export PATH="$SUMO_HOME/tools:$PATH"
 ```
 
-## Create random trips for network
+### DeckGL example
 
-`$ python3 randomTrips.py -n ___NETWORK_NAME___.net.xml -e 100 -l`
+instal via `npm i`
+run `npm start`
 
-## Export vehicle locations to cityIO
+## Usage
 
-`$ python SUMOScope.py`
+`SUMOscope` exposes several functionalities:
 
-change cityIO endpoint to your exciting one. This module does not create new cityIO table instances.
-
-## Optional: export vehicles position post-simulation
-
--   https://sumo.dlr.de/wiki/Simulation/Output/FCDOutput
-
--   run sumo with this option to export the overall paths
-    `sumo -c osm/osm.sumocfg --fcd-output "fcd.xml"`
-
-### create net from osm
-
-```
-netconvert
---osm-files __FILE__.osm -o __FILE__.net.xml
---geometry.remove
---ramps.guess
---junctions.join
---tls.guess-signals
---tls.discard-simple
---tls.join
-```
-
-### Outputs
-
-https://sumo.dlr.de/docs/Simulation/Output.html
-
-### certain geo-ref in `.net`
-
-```
-    <
-    location netOffset=
-    "-565120.67,-5930830.85"
-    convBoundary=
-    "0.00,0.00,4010.49,3225.15"
-    origBoundary=
-    "9.913090,53.450981,10.085598,53.551251"
-    projParameter=
-    "+proj=utm +zone=32 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
-    />
-```
+-   `SUMOscope.create_random_network()` create random network
+-   `SUMOscope.osm_to_sumo_net()` Convert OSM network to SUMO network
+-   `SUMOscope.create_random_demand()` Create random demand for network
+-   `SUMOscope.create_routes()` Create random trips from demand
+-   `SUMOscope.export_sim_to_json()` Export vehicle locations to `results.json`

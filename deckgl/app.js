@@ -93,15 +93,19 @@ export default class App extends Component {
                 id: "trips",
                 data: trips,
                 getPath: d => {
-                    // const noisePath =
-                    //     Math.random() < 0.5
-                    //         ? Math.random() * 0.00005
-                    //         : Math.random() * -0.00005;
+                    /*
+                    create random offsets 
+                    
+                    const noisePath =
+                        Math.random() < 0.5
+                            ? Math.random() * 0.00005
+                            : Math.random() * -0.00005;
 
-                    // for (let i in d.path) {
-                    //     d.path[i][0] = d.path[i][0] + noisePath;
-                    //     d.path[i][1] = d.path[i][1] + noisePath;
-                    // }
+                    for (let i in d.path) {
+                        d.path[i][0] = d.path[i][0] + noisePath;
+                        d.path[i][1] = d.path[i][1] + noisePath;
+                    }
+                    */
 
                     return d.path;
                 },
