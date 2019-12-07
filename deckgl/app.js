@@ -12,7 +12,8 @@ export default class App extends Component {
         super(props);
         this.state = {
             time: 0,
-            opacity: 0.2
+            opacity: 0.2,
+            simSpeed:100
         };
 
         this.vehicles_count = sumoData.meta.vehicles_count;
@@ -27,6 +28,9 @@ export default class App extends Component {
             pitch: 45,
             bearing: 0
         };
+
+        this.randomColorsArray = this.randomColors(this.vehicles_count);
+        console.log(this.randomColorsArray);
     }
 
     randomColors(number) {
@@ -56,7 +60,7 @@ export default class App extends Component {
     _animate() {
         const {
             loopLength = sumoData.meta.sim_length,
-            animationSpeed = 50 // unit time per second
+            animationSpeed = this.state.simSpeed
         } = this.props;
         const timestamp = Date.now() / 1000;
         const loopTime = loopLength / animationSpeed;
@@ -71,6 +75,10 @@ export default class App extends Component {
 
     _controlOpacity(slider) {
         this.setState({ opacity: slider.target.value });
+    }
+
+    _controlSimSpeed(slider) {
+        this.setState({ simSpeed: slider.target.value });
     }
 
     _renderLayers() {
@@ -100,11 +108,7 @@ export default class App extends Component {
                 getTimestamps: d => d.timestamps,
                 getColor: d => {
                     let idInt = parseInt(d.id, 10);
-                    let randomColorsArray = this.randomColors(
-                        this.vehicles_count
-                    );
-
-                    return randomColorsArray[idInt];
+                    return this.randomColorsArray[idInt];
                 },
                 opacity: 0.7,
                 widthMinPixels: 1,
@@ -163,6 +167,15 @@ export default class App extends Component {
                         defaultValue={this.state.opacity}
                         onChange={this._controlOpacity.bind(this)}
                         step="0.01"
+                    />
+                     <input
+                        id="inputSlider"
+                        type="range"
+                        min="0"
+                        max="100"
+                        defaultValue={this.state.simSpeed}
+                        onChange={this._controlSimSpeed.bind(this)}
+                        step="1"
                     />
                 </div>
                 <DeckGL

@@ -4,7 +4,8 @@ import json
 import os
 from subprocess import call
 import sys
-
+import time
+import requests
 
 try:
     sys.path.append(os.path.join(os.path.dirname(
@@ -30,11 +31,26 @@ class SUMOScope():
         self.trips_list = []
         self.scatterplot_list = []
         # max sim time
-        self.max_sim_length = 1000
+        self.max_sim_length = 100
         # how much time did the sim took
         self.actual_sim_length = 0
-        self.vehicles_count = 500
+        self.vehicles_count = 10
         self.current_dir = os.path.dirname(__file__)+"/"
+        self.cityio_table = 'virtual_table'
+        self.cityio_endpoint = 'https://cityio.media.mit.edu/api/table/update/' + \
+            self.cityio_table+'/sumo/'
+
+    def stream_sumo(self, data_to_stream):
+        '''streaming method to cityio'''
+        while True:
+            time.sleep(1)
+            # defining cityio api-endpoint
+            json_data_struct = {"objects": json.dumps(data_to_stream)}
+            request = requests.post(
+                self.cityio_endpoint, json=json_data_struct)
+            # extracting response text
+            cityio_response = request.text
+            print("response:", cityio_response)
 
     def create_random_network(self):
         self.netgenBinary = checkBinary('netgenerate')
@@ -97,8 +113,9 @@ class SUMOScope():
 
     def run_simulation_loop(self):
         '''compute'''
-
+        print('\nrun_simulation_loop...\n')
         step = 0
+
         while step < self.max_sim_length and traci.simulation.getMinExpectedNumber() > 0:
             print('sim step:', step)
             traci.simulationStep()
@@ -141,7 +158,7 @@ if __name__ == "__main__":
     sumo = SUMOScope()
 
     # make network
-    #  sumo.create_random_network()
+    # sumo.create_random_network()
     # sumo.osm_to_sumo_net()
 
     # make random trips
