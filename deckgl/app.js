@@ -25,12 +25,11 @@ export default class App extends Component {
             longitude: sumoData.trips[0].path[0][0],
             latitude: sumoData.trips[0].path[0][1],
             zoom: 14,
-            pitch: 45,
+            pitch: 0,
             bearing: 0
         };
 
         this.randomColorsArray = this.randomColors(this.vehicles_count);
-        console.log(this.randomColorsArray);
     }
 
     randomColors(number) {
@@ -74,7 +73,8 @@ export default class App extends Component {
     }
 
     _controlOpacity(slider) {
-        this.setState({ opacity: slider.target.value });
+        let val = slider.target.value / 100;
+        this.setState({ opacity: val });
     }
 
     _controlSimSpeed(slider) {
@@ -85,33 +85,17 @@ export default class App extends Component {
         const {
             trips = sumoData.trips,
             scatter = sumoData.scatterplot,
-            trailLength = 50
+            trailLength = 20
         } = this.props;
 
         return [
             new TripsLayer({
                 id: "trips",
                 data: trips,
-                getPath: d => {
-                    /*
-                    create random offsets 
-                    
-                    const noisePath =
-                        Math.random() < 0.5
-                            ? Math.random() * 0.00005
-                            : Math.random() * -0.00005;
-
-                    for (let i in d.path) {
-                        d.path[i][0] = d.path[i][0] + noisePath;
-                        d.path[i][1] = d.path[i][1] + noisePath;
-                    }
-                    */
-
-                    return d.path;
-                },
+                getPath: d => d.path,
                 getTimestamps: d => d.timestamps,
                 getColor: d => {
-                    let idInt = parseInt(d.id, 10);
+                    let idInt = parseInt(d.id, 36);
                     return this.randomColorsArray[idInt];
                 },
                 opacity: 0.7,
@@ -129,10 +113,16 @@ export default class App extends Component {
                 stroked: true,
                 filled: false,
                 radiusScale: 1,
-                radiusMinPixels: 1,
+                radiusMinPixels: 0.5,
                 radiusMaxPixels: 5,
-                lineWidthMinPixels: 1,
-                getPosition: d => d.coordinates,
+                lineWidthMinPixels: 0.5,
+                getPosition: d => {
+                    let speedRatio = 10 * (d.speed / d.maxSpeed);
+                    let x = d.coordinates[0];
+                    let y = d.coordinates[1];
+                    let z = speedRatio;
+                    return [x, y, z];
+                },
                 getRadius: d => 1 / d.speed,
                 getLineColor: d => {
                     let speedRatio = d.speed / d.maxSpeed;
@@ -167,10 +157,10 @@ export default class App extends Component {
                         id="inputSlider"
                         type="range"
                         min="0"
-                        max="0.1"
+                        max="100"
                         defaultValue={this.state.opacity}
                         onChange={this._controlOpacity.bind(this)}
-                        step="0.01"
+                        step="1"
                     />
                     <input
                         id="inputSlider"

@@ -27,34 +27,16 @@ class SUMOScope():
     '''sumo'''
 
     def __init__(self):
-        self.osm_path = 'data/network/paris.map.osm'
+        self.network_filename = 'kendall'
+        self.osm_path = 'data/network/'+self.network_filename+'.map.osm'
         self.trips_list = []
         self.scatterplot_list = []
         # max sim time
-        self.max_sim_length = 10000
+        self.max_sim_length = 200
         # how much time did the sim took
         self.actual_sim_length = 0
-        self.vehicles_count = 200
+        self.vehicles_count = 1000
         self.current_dir = os.path.dirname(__file__)+"/"
-        self.cityio_table = 'virtual_table'
-        self.cityio_endpoint = 'https://cityio.media.mit.edu/api/table/update/' + \
-            self.cityio_table+'/sumo/'
-
-    def stream_sumo(self, data_to_stream):
-        '''streaming method to cityio'''
-        while True:
-            time.sleep(1)
-            # defining cityio api-endpoint
-            json_data_struct = {"objects": json.dumps(data_to_stream)}
-            request = requests.post(
-                self.cityio_endpoint, json=json_data_struct)
-            # extracting response text
-            cityio_response = request.text
-            print("response:", cityio_response)
-
-    def create_random_network(self):
-        self.netgenBinary = checkBinary('netgenerate')
-        call([self.netgenBinary, '-c', 'data/network/random_network.netgcfg'])
 
     def osm_to_sumo_net(self):
         self.netconvertBinary = checkBinary('netconvert')
@@ -127,15 +109,6 @@ class SUMOScope():
                 speed = traci.vehicle.getSpeed(veh_id)
                 max_speed = traci.vehicle.getMaxSpeedLat(veh_id)
 
-                try:
-                    # some time parameter for now
-                    if  speed/max_speed<0.5  and self.actual_sim_length>100:
-                        traci.vehicle.changeTarget(veh_id, '470987535#0')
-                    elif self.actual_sim_length > self.max_sim_length/2:
-                        traci.vehicle.changeTarget(veh_id, '-544549304#4')
-                except traci.TraCIException:
-                    pass
-
                 # check if behicle is in list alreay
                 # if so, add locations and timestamps
                 if self.existing_car_bool(veh_id):
@@ -154,14 +127,27 @@ class SUMOScope():
             step += 1
             self.actual_sim_length = step
 
+        def control_vehicle_behavior(vehicle, speed, max_speed, new_taget):
+            '''
+            control the behavior of each vehicle
+            '''
+            try:
+                # some time parameter for now
+                if speed/max_speed < 0.5 and self.actual_sim_length > 100:
+                    traci.vehicle.changeTarget(vehicle, new_taget)
+                elif self.actual_sim_length > self.max_sim_length/2:
+                    traci.vehicle.changeTarget(vehicle, new_taget)
+                return vehicle
+            except traci.TraCIException:
+                pass
+
 
 if __name__ == "__main__":
-
+    # init the class
     sumo = SUMOScope()
 
     # make network
-    # sumo.create_random_network()
-    # sumo.osm_to_sumo_net()
+    sumo.osm_to_sumo_net()
 
     # make random trips
     sumo.create_random_demand()
