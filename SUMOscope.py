@@ -27,8 +27,8 @@ class SUMOScope():
     '''sumo'''
 
     def __init__(self):
-        self.network_filename = 'kendall'
-        self.osm_path = 'data/network/'+self.network_filename+'.map.osm'
+        self.network_filename = 'grasbrook'
+        self.osm_path = 'data/osm/'+self.network_filename+'.map.osm'
         self.trips_list = []
         self.scatterplot_list = []
         # max sim time
