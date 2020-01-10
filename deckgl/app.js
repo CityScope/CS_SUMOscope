@@ -113,9 +113,9 @@ export default class App extends Component {
                 stroked: true,
                 filled: false,
                 radiusScale: 1,
-                radiusMinPixels: 0.5,
+                radiusMinPixels: 0.1,
                 radiusMaxPixels: 5,
-                lineWidthMinPixels: 0.5,
+                lineWidthMinPixels: 0.1,
                 getPosition: d => {
                     let speedRatio = 10 * (d.speed / d.maxSpeed);
                     let x = d.coordinates[0];

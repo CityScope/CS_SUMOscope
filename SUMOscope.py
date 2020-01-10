@@ -27,12 +27,12 @@ class SUMOScope():
     '''sumo'''
 
     def __init__(self):
-        self.network_filename = 'grasbrook'
+        self.network_filename = 'detroit'
         self.osm_path = 'data/osm/'+self.network_filename+'.map.osm'
         self.trips_list = []
         self.scatterplot_list = []
         # max sim time
-        self.max_sim_length = 200
+        self.max_sim_length = 500
         # how much time did the sim took
         self.actual_sim_length = 0
         self.vehicles_count = 1000
@@ -46,7 +46,7 @@ class SUMOScope():
               'data/network/net.net.xml',
               '--geometry.remove',
               '--ramps.guess',
-              '--keep-edges.by-vclass', 'private',
+              '--keep-edges.by-vclass', 'private, public_transport, public_emergency, public_authority, public_army, vip',
               '--junctions.join',
               '--tls.guess-signals',
               '--tls.discard-simple',
@@ -146,14 +146,14 @@ if __name__ == "__main__":
     # init the class
     sumo = SUMOScope()
 
-    # make network
-    sumo.osm_to_sumo_net()
+    # # make network
+    # sumo.osm_to_sumo_net()
 
-    # make random trips
+    # # make random trips
     sumo.create_random_demand()
 
-    # make routes
+    # # make routes
     sumo.create_routes()
 
-    # run and save to json
+    # # run and save to json
     sumo.export_sim_to_json()
