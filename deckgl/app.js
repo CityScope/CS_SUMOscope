@@ -5,7 +5,8 @@ import { StaticMap } from "react-map-gl";
 import DeckGL from "@deck.gl/react";
 import { TripsLayer } from "@deck.gl/geo-layers";
 import { ScatterplotLayer } from "@deck.gl/layers";
-let sumoData = require("../results.json");
+let speedData = require("../speed.json");
+let tripsData = require("../trips.json");
 
 export default class App extends Component {
     constructor(props) {
@@ -16,31 +17,18 @@ export default class App extends Component {
             simSpeed: 100
         };
 
-        this.vehicles_count = sumoData.meta.vehicles_count;
+        this.vehicles_count = speedData.meta.vehicles_count;
         // Set your mapbox token here
         this.MAPBOX_TOKEN =
             "pk.eyJ1IjoicmVsbm94IiwiYSI6ImNqd2VwOTNtYjExaHkzeXBzYm1xc3E3dzQifQ.X8r8nj4-baZXSsFgctQMsg"; // eslint-disable-line
 
         this.INITIAL_VIEW_STATE = {
-            longitude: sumoData.trips[0].path[0][0],
-            latitude: sumoData.trips[0].path[0][1],
+            longitude: tripsData[0].path[0][0],
+            latitude: tripsData[0].path[0][1],
             zoom: 14,
             pitch: 0,
             bearing: 0
         };
-
-        this.randomColorsArray = this.randomColors(this.vehicles_count);
-    }
-
-    randomColors(number) {
-        let colArr = [];
-        for (let i = 0; i < number; i++) {
-            let r = Math.floor(Math.random() * 255);
-            let g = Math.floor(Math.random() * 255);
-            let b = Math.floor(Math.random() * 255);
-            colArr[i] = [r, g, b];
-        }
-        return colArr;
     }
 
     componentDidMount() {
@@ -58,7 +46,7 @@ export default class App extends Component {
 
     _animate() {
         const {
-            loopLength = sumoData.meta.sim_length,
+            loopLength = speedData.meta.sim_length,
             animationSpeed = this.state.simSpeed
         } = this.props;
         const timestamp = Date.now() / 1000;
@@ -83,8 +71,8 @@ export default class App extends Component {
 
     _renderLayers() {
         const {
-            trips = sumoData.trips,
-            scatter = sumoData.scatterplot,
+            trips = tripsData,
+            scatter = speedData.scatterplot,
             trailLength = 20
         } = this.props;
 
@@ -94,10 +82,7 @@ export default class App extends Component {
                 data: trips,
                 getPath: d => d.path,
                 getTimestamps: d => d.timestamps,
-                getColor: d => {
-                    let idInt = parseInt(d.id, 36);
-                    return this.randomColorsArray[idInt];
-                },
+                getColor: [255, 255, 255],
                 opacity: 0.7,
                 widthMinPixels: 1,
                 rounded: true,
@@ -114,7 +99,7 @@ export default class App extends Component {
                 filled: false,
                 radiusScale: 1,
                 radiusMinPixels: 0.1,
-                radiusMaxPixels: 5,
+                radiusMaxPixels: 10,
                 lineWidthMinPixels: 0.1,
                 getPosition: d => {
                     let speedRatio = 10 * (d.speed / d.maxSpeed);
@@ -129,7 +114,7 @@ export default class App extends Component {
                     let r,
                         g,
                         b = 0;
-                    if (speedRatio < 0.5) {
+                    if (speedRatio < 0.7) {
                         r = 255;
                         g = Math.round(51 * speedRatio);
                     } else {

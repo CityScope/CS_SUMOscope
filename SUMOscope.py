@@ -35,7 +35,7 @@ class SUMOScope():
         self.max_sim_length = 500
         # how much time did the sim took
         self.actual_sim_length = 0
-        self.vehicles_count = 1000
+        self.vehicles_count = 300
         self.current_dir = os.path.dirname(__file__)+"/"
 
     def osm_to_sumo_net(self):
@@ -81,14 +81,18 @@ class SUMOScope():
         #
         self.run_simulation_loop()
 
-        json_results = {'meta':
-                        {'sim_length': self.actual_sim_length,
-                         'vehicles_count': self.vehicles_count},
-                        'trips': self.trips_list,
-                        'scatterplot': self.scatterplot_list}
-        #
-        with open(self.current_dir+"results.json", 'w') as outfile:
-            json.dump(json_results, outfile)
+        speed_results = {'meta':
+                         {'sim_length': self.actual_sim_length,
+                          'vehicles_count': self.vehicles_count},
+                         'scatterplot': self.scatterplot_list}
+
+        trips_results = self.trips_list
+
+        with open(self.current_dir+"trips.json", 'w') as outfile:
+            json.dump(trips_results, outfile)
+
+        with open(self.current_dir+"speed.json", 'w') as outfile:
+            json.dump(speed_results, outfile)
 
         traci.close()
         sys.stdout.flush()
