@@ -27,7 +27,7 @@ class SUMOScope():
     '''sumo'''
 
     def __init__(self):
-        self.network_filename = 'detroit'
+        self.network_filename = 'paris'
         self.osm_path = 'data/osm/'+self.network_filename+'.map.osm'
         self.trips_list = []
         self.scatterplot_list = []
@@ -36,7 +36,7 @@ class SUMOScope():
         # how much time did the sim took
         self.actual_sim_length = 0
         self.vehicles_count = 300
-        self.current_dir = os.path.dirname(__file__)+"/"
+        self.current_dir = os.path.dirname(os.path.abspath(__file__)) + "/"
 
     def osm_to_sumo_net(self):
         self.netconvertBinary = checkBinary('netconvert')
@@ -154,10 +154,10 @@ if __name__ == "__main__":
     # sumo.osm_to_sumo_net()
 
     # # make random trips
-    sumo.create_random_demand()
+    # sumo.create_random_demand()
 
     # # make routes
-    sumo.create_routes()
+    # sumo.create_routes()
 
     # # run and save to json
     sumo.export_sim_to_json()

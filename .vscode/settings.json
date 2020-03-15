@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "/Users/noyman/miniconda3/envs/cityscope/bin/python"
+    "python.venvPath": "~/GIT/virtualEnv",
+    "python.pythonPath": "/Users/noyman/GIT/virtualEnv/opencv/bin/python"
 }
