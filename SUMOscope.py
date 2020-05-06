@@ -32,10 +32,10 @@ class SUMOScope():
         self.trips_list = []
         self.scatterplot_list = []
         # max sim time
-        self.max_sim_length = 500
+        self.max_sim_length = 1000
         # how much time did the sim took
         self.actual_sim_length = 0
-        self.vehicles_count = 300
+        self.vehicles_count = 500
         self.current_dir = os.path.dirname(os.path.abspath(__file__)) + "/"
 
     def osm_to_sumo_net(self):
@@ -151,13 +151,13 @@ if __name__ == "__main__":
     sumo = SUMOScope()
 
     # # make network
-    # sumo.osm_to_sumo_net()
+    sumo.osm_to_sumo_net()
 
     # # make random trips
-    # sumo.create_random_demand()
+    sumo.create_random_demand()
 
     # # make routes
-    # sumo.create_routes()
+    sumo.create_routes()
 
     # # run and save to json
     sumo.export_sim_to_json()
